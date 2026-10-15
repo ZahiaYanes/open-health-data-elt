@@ -1,0 +1,64 @@
+version: 2
+
+models:
+  - name: stg_phmev__dispensing
+    description: >
+      Cleaned Open PHMEV dispensing records. Publisher sentinels are resolved to
+      NULL, coded dimensions are decoded, out-of-scope rows are flagged.
+      Grain: one row per ATC path x product x generic status x facility x age
+      band x sex x year.
+
+    columns:
+      - name: dispensing_key
+        description: "Surrogate key over the full dimensional tuple."
+        tests: [unique, not_null]
+
+      - name: atc_level_1
+        description: "WHO ATC anatomical main group. NULL when masked or out of scope."
+        tests:
+          - accepted_values:
+              values: ['A','B','C','D','G','H','J','L','M','N','P','R','S','V']
+
+      - name: age_band
+        description: "Patient age band. NULL when masked (28.1% of rows)."
+        tests:
+          - accepted_values: {values: ['0-19', '20-59', '60+']}
+
+      - name: sex
+        description: "Patient sex. NULL when masked (62.5% of rows) - not usable as an analysis axis."
+        tests:
+          - accepted_values: {values: ['M', 'F']}
+
+      - name: facility_category_group
+        description: "Grouped legal category of the prescribing facility."
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['3+', 'AUTRES', 'CH', 'CHU', 'CLCC', 'ESPIC', 'HL', 'PSY']
+
+      - name: facility_region_code
+        description: "INSEE region code of the facility, zero-padded. Corsica (94) absent from the source."
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['01','02','03','04','06','11','24','27','28','32','44','52','53','75','76','84','93']
+
+      - name: facility_id
+        tests: [not_null]
+
+      - name: n_boxes
+        description: >
+          Number of dispensed boxes. Can be negative: negative values are
+          accounting adjustments, not errors (ADR-002).
+        tests: [not_null]
+
+      - name: amount_reimbursed_eur
+        description: "Amount reimbursed, in EUR. Can be negative (accounting adjustment)."
+        tests: [not_null]
+
+      - name: amount_base_eur
+        description: "Reimbursement base, in EUR. Can be negative (accounting adjustment)."
+        tests: [not_null]
+
+      - name: reference_year
+        tests: [not_null]

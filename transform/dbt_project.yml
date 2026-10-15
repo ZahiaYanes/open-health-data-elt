@@ -1,0 +1,43 @@
+# dbt project configuration.
+# Layers follow the standard staging -> intermediate -> marts pattern.
+
+name: open_health
+version: "1.0.0"
+profile: open_health
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+
+vars:
+  # Landing zone root, relative to the dbt working directory.
+  # Overridden in CI to point at the lightweight test fixture.
+  landing_dir: "../data/landing"
+
+models:
+  open_health:
+    staging:
+      # Views: no storage cost, always consistent with the landing zone.
+      +materialized: view
+      +schema: staging
+    marts:
+      # Tables: aggregates are read many times, computed once.
+      +materialized: table
+      +schema: marts
+
+seeds:
+  open_health:
+    seed_source_baseline:
+      # Types are pinned: an inferred VARCHAR would silently break the
+      # numeric comparison in the reconciliation test.
+      +column_types:
+        reference_year: integer
+        n_rows: bigint
+        total_boxes: bigint
+        total_reimbursed_eur: double
+        total_base_eur: double
+        n_negative_boxes: bigint
+        n_negative_reimbursed: bigint
+        n_negative_base: bigint

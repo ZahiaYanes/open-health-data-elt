@@ -1,0 +1,57 @@
+version: 2
+
+models:
+  - name: dim_atc
+    description: "WHO ATC therapeutic classification. One row per disclosed ATC path."
+    columns:
+      - name: atc_key
+        tests: [unique, not_null]
+      - name: disclosed_depth
+        description: "Deepest ATC level actually disclosed (0-5)."
+        tests:
+          - accepted_values: {values: [0, 1, 2, 3, 4, 5], quote: false}
+
+  - name: dim_facility
+    description: "Prescribing facility. The only analysis axis populated on 100% of rows."
+    columns:
+      - name: facility_key
+        tests: [unique, not_null]
+      - name: facility_category_group
+        tests: [not_null]
+
+  - name: fct_drug_dispensing
+    description: >
+      Dispensing facts at the source grain. Monetary measures are retained as
+      quality sensors; health indicators are built on volumes and ATC classes.
+    columns:
+      - name: dispensing_key
+        tests: [unique, not_null]
+      - name: atc_key
+        tests:
+          - not_null
+          - relationships: {to: ref('dim_atc'), field: atc_key}
+      - name: facility_key
+        tests:
+          - not_null
+          - relationships: {to: ref('dim_facility'), field: facility_key}
+
+  # --- New entry ---
+  - name: ref_critical_antibiotics
+    description: >
+      Hand-curated reference list of critical antibiotics, i.e. antibiotics whose
+      excessive use most strongly drives bacterial resistance. Implemented as a
+      SQL model rather than a seed (see ADR-003). Provisional: pending
+      verification against the official ANSM list.
+    columns:
+      - name: atc_code
+        description: "WHO ATC code of the antibiotic class."
+        tests: [unique, not_null]
+      - name: atc_level
+        description: "ATC hierarchy level the code refers to."
+        tests:
+          - accepted_values: {values: [4, 5], quote: false}
+      - name: expected_in_community_pharmacy
+        description: >
+          Whether this class falls within the Open PHMEV perimeter. IV-only
+          hospital agents are listed for completeness but flagged false.
+        tests: [not_null]

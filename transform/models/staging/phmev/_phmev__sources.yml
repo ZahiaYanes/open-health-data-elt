@@ -1,0 +1,15 @@
+version: 2
+
+sources:
+  - name: phmev
+    description: >
+      Open PHMEV: drugs prescribed in hospitals and dispensed in community
+      pharmacies, published by the French National Health Insurance.
+      Landed as partitioned Parquet by ingestion/sources/phmev.py.
+    tables:
+      - name: dispensing
+        description: "One row per full dimensional tuple. See docs/adr/ADR-001-source-phmev.md"
+        meta:
+          # dbt-duckdb reads the landing zone directly, no load step required.
+          # union_by_name tolerates schema drift between yearly files.
+          external_location: "read_parquet('{{ var('landing_dir') }}/phmev/year=*/*.parquet', union_by_name = true)"

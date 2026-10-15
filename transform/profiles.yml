@@ -1,0 +1,18 @@
+# Connection profiles.
+#
+# `dev` runs on DuckDB: free, local, zero setup, fast enough for 3.5M rows.
+#
+# threads = 1 is deliberate. DuckDB is an in-process engine: queries run inside
+# the Python process itself, and dbt's thread pool triggers segmentation faults
+# in the adapter on macOS. Single-threaded execution costs a few seconds on a
+# project this size and removes the instability entirely.
+# This constraint is specific to the local engine: the future Snowflake target,
+# where compute is remote, will use multiple threads.
+
+open_health:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: "../warehouse/open_health.duckdb"
+      threads: 1

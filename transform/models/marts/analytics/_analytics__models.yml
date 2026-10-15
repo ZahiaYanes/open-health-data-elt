@@ -1,0 +1,27 @@
+version: 2
+
+models:
+  - name: mart_critical_antibiotics
+    description: >
+      Share of critical antibiotics among all systemic antibacterials (ATC J01),
+      by type of prescribing facility. An antimicrobial stewardship indicator.
+      Always reported together with the share of volume whose therapeutic class
+      was masked at source.
+    columns:
+      - name: facility_category_group
+        tests: [not_null]
+      - name: critical_antibiotic_share_pct
+        description: "Percentage of J01 boxes belonging to a critical antibiotic class."
+        tests:
+          - not_null
+          - dbt_utils.accepted_range: {min_value: 0, max_value: 100, inclusive: true}
+      - name: unresolved_class_share_pct
+        description: "Percentage of J01 volume whose ATC level 4 was masked by the publisher."
+        tests:
+          - dbt_utils.accepted_range: {min_value: 0, max_value: 100, inclusive: true}
+      - name: critical_antibiotic_share_pct
+        description: >
+          Percentage of J01 boxes belonging to a critical antibiotic class.
+          Caveat: the numerator is dominated by J01CR (amoxicillin-clavulanate),
+          the single most dispensed class. This indicator describes
+          broad-spectrum prescribing pressure, not last-line antibiotic use.

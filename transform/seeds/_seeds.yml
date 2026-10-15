@@ -1,0 +1,11 @@
+version: 2
+
+seeds:
+  - name: seed_source_baseline
+    description: >
+      Reconciliation baseline, computed by ingestion/compute_baseline.py using
+      DuckDB directly on the raw CSV. Independent from the Python ingestion
+      path, so that a parsing bug cannot pass unnoticed.
+    columns:
+      - name: reference_year
+        tests: [unique, not_null]
